@@ -1,45 +1,63 @@
 <template>
-    <div class="search-box">
-      <v-menu class="calendar"
-        v-model="menu"
-        :close-on-content-click="false"
-        :return-value.sync="selectedDate"
-        offset-y
-        min-width="290px"
-      >
-        <template v-slot:activator="">
-          <v-text-field class="date-picker"
-            v-model="formattedDate"
-            label="Select Date"
-            readonly
-            v-on="on"
-            @click="menu = !menu"
-          ></v-text-field>
-        </template>
-        <v-date-picker v-model="selectedDate" no-title></v-date-picker>
-      </v-menu>
+  <v-card-title v-if="props.boxDisplayTitle" class="title-text-search">{{ props.boxTitle }}</v-card-title>
+    <div class="search-box" :style="{ marginTop: props.marginTop }">
+      <VueDatePicker 
+      v-model="selectedDate" 
+      range 
+      :enable-time-picker="false" 
+      modeHeight="60px"
+      class="calendar"/>
       <v-text-field class="search-bar" v-model="searchText" label="Search"></v-text-field>
       <v-btn class="search-button" @click="search">Search</v-btn>
     </div>
   </template>
   
   <script setup lang="ts">
-  import { ref, computed } from 'vue';
-  
+  import { ref, computed, defineProps } from 'vue';
+  const emit = defineEmits(['search', 'submit'])
+
+
   const selectedDate = ref<Date | null>(null);
   const on = ref<Boolean>(false);
   const searchText = ref<string>('');
   const menu = ref<boolean>(false);
+
+  const props = defineProps({
+    boxTitle: String,
+    boxDisplayTitle: Boolean,
+    boxFullSearchMode: Boolean,
+    marginTop: String
+  });
   
   const formattedDate = computed(() => selectedDate.value ? selectedDate.value.toDateString() : '');
   
   const search = () => {
-    // Perform search based on selectedDate and searchText
+    emit('search', searchText.value);
     console.log('Searching...');
   };
   </script>
   
+  <style>
+    .dp__input{
+      height: 60px;
+    }
+    .v-field__field{
+      background-color: white;
+    }
+  </style>
+
   <style scoped>
+  .date-picker-popup{
+    position: absolute;
+    margin-top:50%;
+    z-index: 1;
+  }
+  .title-text-search{
+    color: rgb(0, 0, 0);
+    font-size: 50px;
+    margin-bottom: 10px;
+    z-index: 1;
+  }
   .date-picker{
     background-color: rgb(230, 230, 230);
     margin-left: 5%;
@@ -51,18 +69,17 @@
   .search-bar{
     margin-left: 10px;
     margin-right: 10px;
-    background-color: rgb(230, 230, 230);
+    background-color: rgb(255, 255, 255);
     height: 38%;
     color: black;
     font-size: 15px;
   }
   .calendar{
     z-index: 1;
-    margin-left: 32%;
-    margin-top: 45%;
+    margin-left:5%;
+    width: 30%;
   }
   .search-box {
-    margin-top: 35%;
     display: flex;
     flex-wrap: wrap; 
     align-items: center;
@@ -75,7 +92,6 @@
   .search-button{
     height: 60px;
     width: 150px;
-    
     margin-left: 10px;
     margin-right: 30px;
     background-color:black;

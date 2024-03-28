@@ -11,9 +11,9 @@
         </div>
         <div class="home-content">
             <div class="contact-form">
-                <v-text-field label="Name"></v-text-field>
-                <v-text-field label="Email"></v-text-field>
-                <v-text-field label="Message"></v-text-field>
+                <v-text-field variant="outlined" label="Name"></v-text-field>
+                <v-text-field variant="outlined" label="Email"></v-text-field>
+                <v-text-field variant="outlined" label="Message"></v-text-field>
             </div>
             <div class="contact-form">
                 <iframe src="https://www.google.com/maps/d/embed?mid=1G-iW8YgBcxWzklxH-46rVX9ZWII&hl=ro&ehbc=2E312F" width="100%" height="580"></iframe>

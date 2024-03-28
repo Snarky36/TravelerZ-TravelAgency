@@ -22,11 +22,17 @@ const vuetify = createVuetify({
 
 import App from './App.vue'
 import router from './router'
+import ToastPlugin from 'vue-toast-notification';
+import VueToast from 'vue-toast-notification';
+import 'vue-toast-notification/dist/theme-sugar.css';
+import '../node_modules/flowbite/dist/flowbite.css';
 
 const app = createApp(App)
-
 app.use(createPinia())
 app.use(router)
 app.use(vuetify)
+app.use(VueToast, {
+  position: 'top'
+})
 app.component('VueDatePicker', VueDatePicker)
 app.mount('#app')

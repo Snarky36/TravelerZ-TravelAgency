@@ -3,9 +3,12 @@
     <div class="title">{{ props.Title }}</div>
     <div class="content">
       <div v-for="(card, index) in filteredDestinations" :key="index" :style="{ width: cardWidth }">
-        <DestinationCards :imageSrc="card.imageSrc" :cardBeginDate="card.beginDate" :cardEndDate="card.endDate"
-          :cardTitle="card.title" :cardLocation="card.location" :cardDescription="card.description"
-          :cardPrice="card.price" :cardDays="card.days" :displayButton="card.displayButton" />
+        <DestinationCards :imageSrc="`../src/assets/${card.image}`" :availabilities="card.availabilities"
+          :cardTitle="card.name" :cardLocation="card.location" :cardDescription="card.description"
+          :cardPrice="card.price" :cardDays="card.days" :displayButton="card.displayButton? card.displayButton: true" 
+          :isAdmin="isAdmin" :discount=card.discountPercent :cardGuid="card.destination_guid" 
+          @destinationDeleted="handleDestinationDeleted"
+          @destinationUpdated="handleDestinationUpdated"/>
       </div>
     </div>
   </div>
@@ -15,19 +18,55 @@
 import DestinationCards from '@/components/DestinationCards.vue';
 import { ref, defineProps, computed, watchEffect } from 'vue'
 import SearchFilter from '@/DataTypes/SearchFilter.ts';
-const beginDate = ref('15.02.2024');
-const endDate = ref('22.02.2024');
+import { useAppStore } from '@/stores/appStore';
+import axios from 'axios';
+const appStore = useAppStore();
+
+const beginDate = ref('');
+const endDate = ref('');
 const filteredDestinations = ref([{}, {}]);
+const destinationList = ref([{}, {}]);
 const cardWidth = ref("calc(33.33% - 20px)");
+const destinationUpdated = ref(false);
+const destinationDeleted = ref(false);
 
 const props = defineProps({
   Title: String,
   Filters: SearchFilter | null,
   ItemsPerRaw: Number | null,
-  DisplaySeeMoreButton: Boolean
+  DisplaySeeMoreButton: Boolean,
+  isAdmin: Boolean,
+  newDestinationAdded: Boolean,
+  showDiscountCards: String,
 });
 
-const destinationList = ref([
+
+const getDestinations = async () => {
+  //console.log('getDestinations',);
+  try {
+    const response = await axios.get(appStore.getRootUrl() + '/api/destinations');
+
+    if(response.status !== 200) {
+      console.error('Error fetching destinations:', response.data);
+      return;
+    }
+
+    if(props.showDiscountCards === "discount"){
+      destinationList.value = response.data.filter((destination) => destination.discountPercent > 0);
+    } else if(props.showDiscountCards === "fullPrice"){
+      destinationList.value = response.data.filter((destination) => destination.discountPercent == 0);
+    }else{
+      destinationList.value = response.data;
+    }
+
+  } catch (error) {
+    console.error('Error fetching destinations:', error);
+  }
+};
+getDestinations();
+
+
+const destinationList2 = ref([
   {
     imageSrc: '../src/assets/schi.png',
     beginDate: beginDate,
@@ -105,27 +144,54 @@ function checkCardWith() {
   return `calc(16.666666666666668% - 20px)`;
 }
 
-
 const mainDivWidth = computed(() => {
   if (props.ItemsPerRaw !== null && props.ItemsPerRaw > 4) return "100%";
   return "60%";
 });
 
 function filterDestinations(filters) {
+  let filteringDate = false;
+  let filterStartDate = new Date();
+  let filterEndDate = new Date();
+  if(filters.startDate !== null && filters.endDate !== null){
+  filterStartDate = filters.startDate;
+  filterEndDate = filters.endDate;
+  filteringDate = true;
+  console.log('filterStartDate:', filterStartDate);
+  console.log('filterEndDate:', filterEndDate);
+  }
   return destinationList.value.filter((destination) => {
-    return destination.title.toLowerCase().includes(filters.place?.toLowerCase()) || filters.place?.toLowerCase().includes(destination.title.toLowerCase())
-      || destination.location.toLowerCase().includes(filters.location?.toLowerCase()) || filters.location?.toLowerCase().includes(destination.location.toLowerCase())
-      || destination.beginDate <= filters.startDate || destination.endDate >= filters.endDate
-      || destination.price <= filters.price
-      || destination.days <= filters.days
+    if(destination.availabilities?.length > 0){
+      beginDate.value = new Date(destination.availabilities[0].startDate);
+      endDate.value = new Date(destination.availabilities[0].endDate);
+      console.log('beginDate:', beginDate.value);
+      console.log('endDate:', endDate.value);
+    }
+    console.log("result" ,(beginDate.value >= filters.startDate && endDate.value <= filters.endDate))
+    const locationFilter = destination.name.toLowerCase().includes(filters.place?.toLowerCase()) || filters.place?.toLowerCase().includes(destination.name.toLowerCase())
+    const dateFilter = filteringDate ? (beginDate.value >= filters.startDate && endDate.value <= filters.endDate) : true;
+
+    return locationFilter && dateFilter
+      // || destination.price <= filters.price
+      // || destination.days <= filters.days
   });
 }
 
-
 watchEffect(() => {
+  if(destinationUpdated.value){
+    getDestinations();
+    destinationUpdated.value = false;
+  }
+  if(destinationDeleted.value){
+    getDestinations();
+    destinationDeleted.value = false;
+  }
+  if(props.newDestinationAdded){
+    getDestinations();
+  }
   if (EnsureFilters()) {
     filteredDestinations.value = filterDestinations(props.Filters);
-  } else {
+  }else{
     filteredDestinations.value = destinationList.value;
   }
   cardWidth.value = checkCardWith();
@@ -142,6 +208,13 @@ function EnsureFilters() {
   // console.log('EnsureFilters:', result);
   return result;
 }
+function handleDestinationUpdated(){
+  destinationUpdated.value = true;
+}
+function handleDestinationDeleted() {
+  destinationDeleted.value = true;
+}
+
 </script>
 
 <style scoped>

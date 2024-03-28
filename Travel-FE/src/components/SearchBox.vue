@@ -7,7 +7,8 @@
       :enable-time-picker="false" 
       modeHeight="60px"
       class="calendar"/>
-      <v-text-field class="search-bar" v-model="searchText" label="Search"></v-text-field>
+      {{ console.log(selectedDate) }}
+      <v-text-field class="search-bar" variant="outlined" v-model="searchText" label="Search"></v-text-field>
       <v-btn class="search-button" @click="search">Search</v-btn>
     </div>
   </template>
@@ -32,7 +33,7 @@
   const formattedDate = computed(() => selectedDate.value ? selectedDate.value.toDateString() : '');
   
   const search = () => {
-    emit('search', searchText.value);
+    emit('search', searchText.value, selectedDate.value);
     console.log('Searching...');
   };
   </script>

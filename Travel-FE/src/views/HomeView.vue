@@ -1,8 +1,3 @@
-<script setup lang="ts">
-import DestinationManager from '../components/DestinationManager.vue';
-import SearchBox from '../components/SearchBox.vue';
-</script>
-
 <template>
   <div class="home-page">
     <div class="title-div">
@@ -11,15 +6,31 @@ import SearchBox from '../components/SearchBox.vue';
         <p class="off-word">OF</p>
       </div>
       <img alt="BackgroundImage" class="img" src="@/assets/Travel-home-background.png" />
-      <SearchBox :boxDisplayTitle=false marginTop="35%" />
+      <SearchBox :boxDisplayTitle=false marginTop="35%" @search="getSearchFilter" />
 
     </div>
     <div class="home-content">
-      <DestinationManager Title="Destination Packs" :DisplaySeeMoreButton="true" :ItemsPerRaw="3" />
+      <DestinationManager Title="Destination Packs" :DisplaySeeMoreButton="true" :ItemsPerRaw="3"/>
     </div>
   </div>
 
 </template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import DestinationManager from '../components/DestinationManager.vue';
+import SearchBox from '../components/SearchBox.vue';
+import SearchFilter from '@/DataTypes/SearchFilter';
+import router from '@/router';
+
+const searchFilter = ref(new SearchFilter());
+
+function getSearchFilter(place: string) {
+  searchFilter.value = new SearchFilter(place);
+  router.push("/destinations#searched");
+}
+
+</script>
 
 <style scoped>
 .title-div .title-text {

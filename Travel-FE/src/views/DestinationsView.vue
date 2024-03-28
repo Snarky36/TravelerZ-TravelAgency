@@ -6,10 +6,10 @@
     </div>
     <div id="searched" class="home-content">
       <DestinationManager Title="All Destinations in one place" :DisplaySeeMoreButton="true" :ItemsPerRaw="3"
-        :Filters="searchFilter" />
+        :Filters="searchFilter" showDiscountCards="fullPrice"/>
     </div>
     <div id="discounts" class="home-content">
-      <DestinationManager Title="Discounted Destinations" :DisplaySeeMoreButton="true" :ItemsPerRaw="4" />
+      <DestinationManager Title="Discounted Destinations" :DisplaySeeMoreButton="true" :ItemsPerRaw="4" showDiscountCards="discount"/>
     </div>
   </div>
 
@@ -18,17 +18,31 @@
 <script setup lang="ts">
 import DestinationManager from '@/components/DestinationManager.vue';
 import SearchBox from '../components/SearchBox.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, watchEffect } from 'vue';
 import router from '@/router';
+import { useRoute } from 'vue-router';
 import SearchFilter from '@/DataTypes/SearchFilter';
 
 const searchFilter = ref(new SearchFilter());
+const route = useRoute();
 
-function getSearchFilter(place: string) {
-  searchFilter.value = new SearchFilter(place);
+watchEffect(() => {
+  if (route.query.filterKey){
+    console.log('route.query.filterKey:', route.query.filterKey);
+    setTimeout(() => {
+      getSearchFilter(route.query.filterKey as string, '');
+    }, 600);
+  }
+});
+
+function getSearchFilter(place: string, dates: Array<string>) {
+  if(dates?.length > 0){
+    searchFilter.value = new SearchFilter(place, dates[0], dates[1]);
+  } else {
+    searchFilter.value = new SearchFilter(place);
+  }
   router.push("/destinations#searched");
 }
-
 </script>
 
 <style scoped>

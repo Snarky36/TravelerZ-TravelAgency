@@ -3,6 +3,9 @@ import HomeView from '../views/HomeView.vue'
 import ContactView from '../views/ContactView.vue'
 import DestinationsView from '../views/DestinationsView.vue'
 import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import ManageDestinations from '@/views/ManageDestinations.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,7 +27,8 @@ const router = createRouter({
     {
       path: '/destinations',
       name: 'destinations',
-      component: DestinationsView
+      component: DestinationsView,
+      props: route => ({ filterKey: route.params.filterKey })
     },
     {
       path: '/contact',
@@ -35,6 +39,16 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterView
+    },
+    {
+      path: '/manage-destinations',
+      name: 'manageDestinations',
+      component: ManageDestinations
     },
     
   ]

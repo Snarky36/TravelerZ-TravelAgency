@@ -36,6 +36,7 @@ class DestinationService:
             destination_entity = DestinationEntity(**destination_data)
 
             for availability_data in availabilities_data:
+                availability_data['guid'] = uuid4()
                 availability_data['startDate'] = datetime.strptime(availability_data['startDate'], '%Y-%m-%dT%H:%M:%S.%fZ')
                 availability_data['endDate'] = datetime.strptime(availability_data['endDate'], '%Y-%m-%dT%H:%M:%S.%fZ')
                 availability_entity = AvailabilityEntity(**availability_data)
@@ -103,3 +104,47 @@ class DestinationService:
             destination_data.append(destination.to_json())
 
         return destination_data
+
+    def add_reservation(self, guid, data):
+        destination = DestinationEntity.objects.get(destination_guid=guid)
+        if destination:
+            data['guid'] = uuid4()
+            availability_entity = AvailabilityEntity(**data)
+            destination.availabilities.append(availability_entity)
+        destination.save()
+        return destination.to_json()
+
+    def update_reservation(self, guid, resevedGuid,  data):
+        destination = DestinationEntity.objects.get(destination_guid=guid)
+        if destination:
+            for reservation in destination.availabilities:
+                if str(reservation['guid']) == resevedGuid:
+                    reservation['startDate'] = data['startDate']
+                    reservation['endDate'] = data['endDate']
+                    reservation['availableSeats'] = data['availableSeats']
+                    reservation['totalPrice'] = data['totalPrice']
+        destination.save()
+        return destination.to_json()
+
+    def delete_reservation(self, guid, dataGuid):
+        destination = DestinationEntity.objects.get(destination_guid=guid)
+
+        if destination:
+            destination.availabilities.filter(guid=dataGuid).delete()
+            destination.save()
+            return True
+
+        return False
+
+
+    def reserve_place(self, guid, reservedGuid):
+        destination = DestinationEntity.objects.get(destination_guid=guid)
+        if destination:
+            for reservation in destination.availabilities:
+                if str(reservation['guid']) == reservedGuid:
+                    reservation['occupiedSeats'] = reservation['occupiedSeats'] + 1
+                    break
+            destination.save()
+
+        return destination.to_json()
+

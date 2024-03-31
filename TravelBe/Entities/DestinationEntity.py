@@ -3,7 +3,7 @@ import io
 
 from mongoengine import Document, StringField, FloatField, IntField, EmbeddedDocumentListField, UUIDField, BinaryField
 from Entities.AvailabilityEntity import AvailabilityEntity
-
+from uuid import uuid4, UUID
 
 class DestinationEntity(Document):
 
@@ -33,9 +33,11 @@ class DestinationEntity(Document):
             'discountPercent': self.discountPercent,
             'availabilities': [
                 {
+                    'guid': availability.guid,
                     'startDate': str(availability.startDate),
                     'endDate': str(availability.endDate),
                     'availableSeats': availability.availableSeats,
+                    'occupiedSeats': availability.occupiedSeats,
                     'totalPrice': availability.totalPrice
                 }
                 for availability in self.availabilities

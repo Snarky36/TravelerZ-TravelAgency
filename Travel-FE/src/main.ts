@@ -27,6 +27,7 @@ import VueToast from 'vue-toast-notification';
 import 'vue-toast-notification/dist/theme-sugar.css';
 import '../node_modules/flowbite/dist/flowbite.css';
 
+
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)

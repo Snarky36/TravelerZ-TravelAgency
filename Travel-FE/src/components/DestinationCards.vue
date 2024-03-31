@@ -32,7 +32,7 @@
       :price="props.cardPrice"
       :availableSeats="props.cardDays" 
       :discount="props.discount" 
-      :availabilities="props.availabilities"
+      :availabilities="reservations"
       :guid="cardGuid" 
       @cardUpdated="handleCardUpdated" />
 
@@ -56,6 +56,7 @@ import { useAppStore } from '@/stores/appStore';
 import { useToast } from 'vue-toast-notification';
 import UpdateDestinationModal from '@/components/modal/UpdateDestinationModal.vue';
 import ShowMoreModal from '@/components/modal/ShowMoreModal.vue';
+import { ProgramUpdateLevel } from 'typescript';
 const $toast = useToast();
 const appStore = useAppStore();
 const emit = defineEmits(['destinationDeleted', 'destinationUpdated']);
@@ -72,6 +73,7 @@ const props = defineProps({
   cardGuid: String,
   availabilities: Array
 })
+const reservations = ref([]);
 const beginDate = ref('');
 const endDate = ref('');
 const cardDays = ref('');
@@ -85,9 +87,14 @@ function closeModal() {
   showMoreModal.value = false;
 }
 function showModal() {
-  isShowModal.value = true
+  getDestination().then(() => {
+    isShowModal.value = true;
+  });
 }
 watchEffect(() => {
+  if(props.availabilities)
+    reservations.value = props.availabilities;
+
   if (cardUpdated.value) {
     showToast('success', 'Destination updated successfully');
     emit('destinationUpdated');
@@ -103,7 +110,18 @@ watchEffect(() => {
   cardDays.value = (Date.parse(endDate.value) - Date.parse(beginDate.value)) / (1000 * 60 * 60 * 24);
 });
 
+async function getDestination() {
+    try {
+        const url = `${appStore.getRootUrl()}/api/destination/${props.cardGuid}`;
 
+        await axios.get(url).then((response) => {
+            reservations.value = response.data.availabilities;   
+        });
+    } catch (error) {
+
+        console.error('Error updating destination:', error);
+    }
+}
 const deleteCard = async () => {
   try {
     const response = await axios.delete(appStore.getRootUrl() + `/api/delete-destination/${props.cardGuid}`);

@@ -5,8 +5,8 @@
                 <h2>Update destination: {{ props.title }}</h2>
                 <button @click="closeModal" class="pi pi-times-circle icon"></button>
             </div>
-            {{ console.log(props.availabilities) }}
             <div class="modal-body">
+                <div v-if="!showStats" class="modal-body">
                 <v-text-field variant="outlined" v-model="title" label="Title" class="text-field"></v-text-field>
                 <v-text-field variant="outlined" v-model="location" label="Location" class="text-field"></v-text-field>
                 <v-text-field variant="outlined" v-model="description" label="Description"
@@ -18,10 +18,16 @@
                     label="Available Seats" class="text-field"></v-text-field>
                 <v-text-field variant="outlined" type="number" min="0" v-model.number="discount" label="Discount %"
                     class="text-field"></v-text-field>
-                <UpdateDisponibilityTable :availabilities="props.availabilities" :location="props.location" :isAdmin="true" />
+                </div>
+                
+                <UpdateDisponibilityTable :availabilities="props.availabilities" :location="props.location" :isAdmin="true" :dest_guid="props.guid"/>
+                
+                <DoughnutChart v-if="showStats" :chartData="chartData"/>
             </div>
             <div class="modal-footer">
-                <button class="update-button" @click="updateDestination()"> Update </button>
+                <button v-if="!showStats" class="show-button" @click="handelShowStats()"> Show Statistics </button>
+                <button v-if="showStats" class="closeButton" @click="handelCloseStats()"> Close Statistics </button>
+                <button v-if="!showStats" class="update-button" @click="updateDestination()"> Update </button>
                 <button class="closeButton" @click="closeModal()"> Close </button>
             </div>
         </div>
@@ -34,6 +40,9 @@ import UpdateDisponibilityTable from './UpdateDisponibilityTable.vue'
 import axios from 'axios'
 import { useAppStore } from '@/stores/appStore'
 import { useToast } from 'vue-toast-notification';
+import { DoughnutChart } from 'vue-chart-3';
+import { Chart, registerables } from 'chart.js';
+Chart.register(...registerables);
 
 const $toast = useToast();
 const appStore = useAppStore();
@@ -48,13 +57,30 @@ const props = defineProps({
     discount: Number,
     availabilities: Array
 })
-
+const showStats = ref(false);
 const title = ref('');
 const location = ref('');
 const description = ref('');
 const price = ref(0);
 const availableSeats = ref(0);
 const discount = ref(0);
+const reservationsPerMonth = ref([0,0,0,0,0,0,0,0,0,0,0,0]);
+const reservations = ref([]);
+const chartData = ref({
+  labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  datasets: [
+    {
+      label: 'Reservations per Month',
+      data: reservationsPerMonth.value,
+      backgroundColor: [
+        'rgba(255, 255, 255, 0.9)', 'rgba(227, 1, 38, 0.9)', 'rgba(80, 200, 120, 0.9)', 'rgba(255, 255, 102, 0.9)',
+        'rgba(230, 224, 240, 0.9)', 'rgba(250, 218, 221, 0.9)', 'rgba(255, 127, 80, 0.9)', 'rgba(255, 64, 64, 0.9)',
+        'rgba(183, 65, 14, 0.9)', 'rgba(128, 0, 128, 0.9)', 'rgba(165, 42, 42, 0.9)', 'rgba(0, 100, 0, 0.9)'
+      ],
+    },
+  ],
+});
+
 
 watchEffect(() => {
     title.value = props.title;
@@ -63,6 +89,22 @@ watchEffect(() => {
     price.value = props.price;
     discount.value = props.discount;
 })
+
+function handelShowStats() {
+    getDestination().then(() => {
+        
+        reservations.value.forEach((availability) => {
+            const startDate = new Date(availability.startDate);
+            const month = startDate.getMonth();
+            reservationsPerMonth.value[month] += availability.occupiedSeats;
+        });
+        showStats.value = true;
+    });
+
+}
+function handelCloseStats() {
+    showStats.value = false;
+}
 
 const emit = defineEmits(['closeModal', 'cardUpdated']);
 
@@ -98,6 +140,19 @@ async function updateDestination() {
     }
 }
 
+async function getDestination() {
+    try {
+        const url = `${appStore.getRootUrl()}/api/destination/${props.guid}`;
+
+        await axios.get(url).then((response) => {
+            reservations.value = response.data.availabilities;   
+        });
+    } catch (error) {
+
+        console.error('Error updating destination:', error);
+    }
+}
+
 </script>
 
 
@@ -121,6 +176,7 @@ async function updateDestination() {
     border-radius: 8px;
     width: 40%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    overflow-y: auto;
 }
 
 .modal-header {
@@ -166,8 +222,20 @@ async function updateDestination() {
         border-radius: 5px;
         cursor: pointer;
     }
-
     .update-button:hover {
+        background-color: var(--TravelTheme, #45acc4); 
+    }
+
+    .show-button {
+        background-color: var(--TravelTheme, #5bb0c4);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-right:10%;
+    }
+    .show-button:hover {
         background-color: var(--TravelTheme, #45acc4); 
     }
 

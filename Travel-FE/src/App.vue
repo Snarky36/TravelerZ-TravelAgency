@@ -5,7 +5,21 @@ import Header from './components/Header.vue'
 import Footer from './components/Footer.vue'
 import { useAppStore } from './stores/appStore'
 import { createApp, watch } from "vue";
+import axios from 'axios';
 
+// Add a request interceptor
+axios.interceptors.request.use(
+  function (config) {
+    const token = sessionStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  }
+);
 
 const appStore = useAppStore();
 console.log("App",sessionStorage.getItem('token'));

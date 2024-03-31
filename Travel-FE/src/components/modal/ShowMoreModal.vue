@@ -6,7 +6,7 @@
                 <button @click="closeModal" class="pi pi-times-circle icon"></button>
             </div>
             <div class="modal-body">
-                <UpdateDisponibilityTable :availabilities="props.availabilities" :location="location" :isAdmin="false" />
+                <UpdateDisponibilityTable :dest_guid="props.guid" :availabilities="props.availabilities" :location="location" :isAdmin="false" />
             </div>
             <div class="modal-footer">
                 <button class="closeButton" @click="closeModal()"> Close </button>
@@ -65,6 +65,7 @@ function closeModal() {
     z-index: 1000;
     justify-content: center;
     align-items: center;
+    overflow-y: scroll;
 }
 
 .modal {
@@ -73,6 +74,7 @@ function closeModal() {
     border-radius: 8px;
     width: 40%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    overflow-y: scroll;
 }
 
 .modal-header {
